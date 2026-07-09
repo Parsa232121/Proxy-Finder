@@ -351,7 +351,7 @@
                 // در غیر این صورت، از داده‌های نمونه استفاده کن
                 const fallback = getFallbackProxies();
                 renderProxies(fallback);
-                statusElement.innerHTML = '⚠️ خطا در دریافت، از داده‌های نمونه استفاده شد.';
+                statusElement.innerHTML = 'خطایی رخ داد.';
             }
         }
 
@@ -592,6 +592,11 @@
             document.getElementById('status').innerHTML = 
                 `📌 <span class="count">${fallback.length}</span> پروکسی نمونه بارگذاری شد.`;
         };
+        function openTelegram(link) {
+    // تبدیل لینک https://t.me/proxy به tg://proxy
+    const tgLink = link.replace('https://t.me/proxy', 'tg://proxy');
+    window.open(tgLink, '_blank');
+}
     </script>
 
 </body>
