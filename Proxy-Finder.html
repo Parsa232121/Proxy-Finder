@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>یابنده پروکسی تلگرام</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Vazir', Tahoma, Arial, sans-serif;
+        }
+        body {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: #334155;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            width: 100%;
+            max-width: 900px;
+            padding: 24px;
+            color: #f1f5f9;
+        }
+        h1 {
+            text-align: center;
+            font-weight: normal;
+            font-size: 24px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            justify-content: center;
+        }
+        .controls button {
+            background: #475569;
+            border: none;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .controls button:hover {
+            background: #64748b;
+            transform: scale(1.02);
+        }
+        .controls button.primary {
+            background: #3b82f6;
+        }
+        .controls button.primary:hover {
+            background: #2563eb;
+        }
+        .controls button.danger {
+            background: #ef4444;
+        }
+        .controls button.danger:hover {
+            background: #dc2626;
+        }
+        .proxy-list {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 12px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+        .proxy-item {
+            background: #0f172a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            border-right: 3px solid #3b82f6;
+            transition: 0.2s;
+        }
+        .proxy-item:hover {
+            background: #1e293b;
+        }
+        .proxy-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex: 1;
+            min-width: 150px;
+        }
+        .proxy-server {
+            font-weight: bold;
+            font-size: 14px;
+            color: #e2e8f0;
+            direction: ltr;
+            text-align: left;
+        }
+        .proxy-secret {
+            font-size: 11px;
+            color: #94a3b8;
+            word-break: break-all;
+            direction: ltr;
+            text-align: left;
+        }
+        .proxy-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .proxy-actions button {
+            background: #334155;
+            border: none;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .proxy-actions button.copy-btn:hover {
+            background: #3b82f6;
+        }
+        .proxy-actions button.tg-btn {
+            background: #1e3a5f;
+        }
+        .proxy-actions button.tg-btn:hover {
+            background: #2563eb;
+        }
+        .status {
+            text-align: center;
+            font-size: 14px;
+            color: #94a3b8;
+            padding: 10px;
+        }
+        .status .count {
+            color: #f1f5f9;
+            font-weight: bold;
+        }
+        .status .source {
+            color: #60a5fa;
+        }
+        .footer {
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .proxy-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .proxy-list::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .proxy-list::-webkit-scrollbar-thumb {
+            background: #475569;
+            border-radius: 3px;
+        }
+        .proxy-list::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+        .empty-state {
+            text-align: center;
+            color: #64748b;
+            padding: 40px 20px;
+        }
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 20px;
+        }
+        .loading .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #334155;
+            border-top: 4px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .badge-count {
+            background: #3b82f6;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 10px;
+            font-size: 12px;
+        }
+        @media (max-width: 600px) {
+            .container {
+                padding: 16px;
+            }
+            .proxy-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .proxy-actions {
+                justify-content: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>
+            <span>📡</span> یابنده پروکسی تلگرام
+        </h1>
+        <p class="subtitle">دریافت مستقیم از مخزن <strong>SoliSpirit/mtproto</strong></p>
+
+        <div class="controls">
+            <button class="primary" onclick="loadProxies()">🔄 بارگذاری پروکسی‌ها</button>
+            <button onclick="getRandomProxy()">🎲 یکی تصادفی</button>
+            <button onclick="copyAllProxies()">📋 کپی همه</button>
+            <button class="danger" onclick="clearList()">🗑 پاک کردن لیست</button>
+        </div>
+
+        <div class="proxy-list" id="proxyList">
+            <div class="empty-state">
+                <div class="icon">🔍</div>
+                <p>برای شروع، روی دکمه "بارگذاری پروکسی‌ها" کلیک کنید.</p>
+                <p style="font-size: 12px; margin-top: 5px;">لیست از مخزن عمومی به‌روز می‌شود.</p>
+            </div>
+        </div>
+
+        <div class="status" id="status">⏳ آماده به کار</div>
+        <div class="footer">
+            <span>📦 منبع: <a href="https://github.com/SoliSpirit/mtproto" target="_blank">SoliSpirit/mtproto</a></span>
+            <span>🔄 به‌روزرسانی خودکار هر ۱۲ ساعت</span>
+        </div>
+    </div>
+
+    <script>
+        // =============================================
+        // 1. تنظیمات
+        // =============================================
+        const PROXY_SOURCE = 'https://raw.githubusercontent.com/SoliSpirit/mtproto/master/all_proxies.txt';
+        const STORAGE_KEY = 'telegram_proxies_list';
+        const STORAGE_TIME_KEY = 'telegram_proxies_time';
+
+        // =============================================
+        // 2. توابع اصلی
+        // =============================================
+
+        // بارگذاری پروکسی‌ها از گیت‌هاب
+        async function loadProxies() {
+            const listElement = document.getElementById('proxyList');
+            const statusElement = document.getElementById('status');
+
+            // نمایش حالت بارگذاری
+            listElement.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>در حال دریافت لیست پروکسی‌ها...</p>
+                    <p style="font-size: 12px; margin-top: 5px;">از مخزن SoliSpirit/mtproto</p>
+                </div>
+            `;
+            statusElement.innerHTML = '⏳ در حال دریافت...';
+
+            try {
+                const response = await fetch(PROXY_SOURCE);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const text = await response.text();
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                
+                // تجزیه خطوط
+                const proxies = parseProxyLines(lines);
+                
+                if (proxies.length === 0) {
+                    throw new Error('هیچ پروکسی معتبری در لیست یافت نشد');
+                }
+
+                // ذخیره در localStorage
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(proxies));
+                localStorage.setItem(STORAGE_TIME_KEY, new Date().toISOString());
+
+                // نمایش پروکسی‌ها
+                renderProxies(proxies);
+                statusElement.innerHTML = `
+                    ✅ <span class="count">${proxies.length}</span> 
+                    پروکسی از <span class="source">SoliSpirit/mtproto</span> 
+                    بارگذاری شد.
+                `;
+
+            } catch (error) {
+                console.error('خطا در بارگذاری:', error);
+                
+                // تلاش برای استفاده از داده‌های ذخیره شده
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    try {
+                        const proxies = JSON.parse(saved);
+                        if (proxies.length > 0) {
+                            renderProxies(proxies);
+                            statusElement.innerHTML = `
+                                ⚠️ خطا در دریافت جدید. 
+                                <span class="count">${proxies.length}</span> 
+                                پروکسی از حافظه بارگذاری شد.
+                            `;
+                            return;
+                        }
+                    } catch (e) {}
+                }
+
+                // در غیر این صورت، از داده‌های نمونه استفاده کن
+                const fallback = getFallbackProxies();
+                renderProxies(fallback);
+                statusElement.innerHTML = '⚠️ خطا در دریافت، از داده‌های نمونه استفاده شد.';
+            }
+        }
+
+        // تجزیه خطوط متنی
+        function parseProxyLines(lines) {
+            const proxies = [];
+            const seen = new Set();
+
+            for (const line of lines) {
+                let match = line.match(/https?:\/\/t\.me\/proxy\?server=([^&]+)&port=(\d+)&secret=([a-fA-F0-9]+)/i);
+                if (match) {
+                    const server = match[1].trim();
+                    const port = match[2].trim();
+                    const secret = match[3].trim();
+                    const key = `${server}:${port}`;
+                    
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        proxies.push({ server, port, secret });
+                    }
+                    continue;
+                }
+
+                // فرمت tg://proxy
+                match = line.match(/tg:\/\/proxy\?server=([^&]+)&port=(\d+)&secret=([a-fA-F0-9]+)/i);
+                if (match) {
+                    const server = match[1].trim();
+                    const port = match[2].trim();
+                    const secret = match[3].trim();
+                    const key = `${server}:${port}`;
+                    
+                    if (!seen.has(key)) {
+                        seen.add(key);
+                        proxies.push({ server, port, secret });
+                    }
+                }
+            }
+
+            return proxies;
+        }
+
+        // رندر پروکسی‌ها در صفحه
+        function renderProxies(proxies) {
+            const listElement = document.getElementById('proxyList');
+
+            if (!proxies || proxies.length === 0) {
+                listElement.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <p>هیچ پروکسی‌ای یافت نشد.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            proxies.forEach((proxy, index) => {
+                const server = proxy.server || 'نامشخص';
+                const port = proxy.port || '443';
+                const secret = proxy.secret || '';
+                const tgLink = `tg://proxy?server=${server}&port=${port}&secret=${secret}`;
+                const tmeLink = `https://t.me/proxy?server=${server}&port=${port}&secret=${secret}`;
+
+                html += `
+                    <div class="proxy-item">
+                        <div class="proxy-info">
+                            <span class="proxy-server">🌐 ${server}:${port}</span>
+                            <span class="proxy-secret">🔑 ${secret.substring(0, 20)}${secret.length > 20 ? '...' : ''}</span>
+                        </div>
+                        <div class="proxy-actions">
+                            <button class="copy-btn" onclick="copyProxy('${tgLink}')">📋 کپی</button>
+                            <button class="tg-btn" onclick="openTelegram('${tmeLink}')">▶️ باز کردن</button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            listElement.innerHTML = html;
+        }
+
+        // =============================================
+        // 3. توابع کمکی
+        // =============================================
+
+        function copyProxy(link) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(link)
+                    .then(() => showToast('✅ لینک پروکسی کپی شد!'))
+                    .catch(() => fallbackCopy(link));
+            } else {
+                fallbackCopy(link);
+            }
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showToast('✅ لینک پروکسی کپی شد!');
+            } catch (e) {
+                showToast('❌ کپی نشد. لطفاً دستی کپی کنید.');
+            }
+            document.body.removeChild(textarea);
+        }
+
+        function openTelegram(link) {
+            window.open(link, '_blank');
+        }
+
+        function getRandomProxy() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+                showToast('⚠️ ابتدا پروکسی‌ها را بارگذاری کنید!');
+                return;
+            }
+            const proxies = JSON.parse(stored);
+            if (!proxies || proxies.length === 0) {
+                showToast('⚠️ هیچ پروکسی‌ای موجود نیست!');
+                return;
+            }
+            const random = proxies[Math.floor(Math.random() * proxies.length)];
+            const link = `tg://proxy?server=${random.server}&port=${random.port}&secret=${random.secret}`;
+            copyProxy(link);
+        }
+
+        function copyAllProxies() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (!stored) {
+                showToast('⚠️ ابتدا پروکسی‌ها را بارگذاری کنید!');
+                return;
+            }
+            const proxies = JSON.parse(stored);
+            if (!proxies || proxies.length === 0) {
+                showToast('⚠️ هیچ پروکسی‌ای موجود نیست!');
+                return;
+            }
+            let text = '';
+            proxies.forEach(p => {
+                text += `tg://proxy?server=${p.server}&port=${p.port}&secret=${p.secret}\n`;
+            });
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text)
+                    .then(() => showToast(`✅ ${proxies.length} پروکسی کپی شد!`))
+                    .catch(() => fallbackCopy(text));
+            } else {
+                fallbackCopy(text);
+                showToast(`✅ ${proxies.length} پروکسی کپی شد!`);
+            }
+        }
+
+        function clearList() {
+            if (confirm('آیا از پاک کردن لیست پروکسی‌ها مطمئن هستید؟')) {
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(STORAGE_TIME_KEY);
+                document.getElementById('proxyList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🗑</div>
+                        <p>لیست پروکسی‌ها پاک شد.</p>
+                        <p style="font-size: 12px; margin-top: 5px;">برای دریافت مجدد، روی "بارگذاری" کلیک کنید.</p>
+                    </div>
+                `;
+                document.getElementById('status').innerHTML = '🗑 لیست پاک شد.';
+            }
+        }
+
+        function showToast(message) {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            setTimeout(() => {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    const count = JSON.parse(stored).length;
+                    status.innerHTML = `📌 <span class="count">${count}</span> پروکسی در لیست موجود است.`;
+                } else {
+                    status.innerHTML = '📌 برای شروع، پروکسی‌ها را بارگذاری کنید.';
+                }
+            }, 3000);
+        }
+
+        // =============================================
+        // 4. داده‌های نمونه (Fallback)
+        // =============================================
+        function getFallbackProxies() {
+            return [
+                { server: 'sv.just-money.co.uk', port: '443', secret: 'ee1603010200010001fc030386e24c3add626973636f7474692e79656b74616e65742e636f6d' },
+                { server: '185.159.157.18', port: '443', secret: 'ee34567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' },
+                { server: '45.95.234.10', port: '443', secret: 'ee34567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' },
+                { server: '5.161.86.237', port: '443', secret: 'ee34567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef' },
+            ];
+        }
+
+        // =============================================
+        // 5. بارگذاری خودکار در شروع
+        // =============================================
+        window.onload = function() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            const storedTime = localStorage.getItem(STORAGE_TIME_KEY);
+            
+            if (stored) {
+                try {
+                    const proxies = JSON.parse(stored);
+                    if (proxies && proxies.length > 0) {
+                        renderProxies(proxies);
+                        
+                        // بررسی زمان ذخیره‌سازی
+                        if (storedTime) {
+                            const savedDate = new Date(storedTime);
+                            const now = new Date();
+                            const hoursDiff = (now - savedDate) / (1000 * 60 * 60);
+                            
+                            if (hoursDiff < 12) {
+                                document.getElementById('status').innerHTML = 
+                                    `📌 <span class="count">${proxies.length}</span> پروکسی از حافظه (${Math.round(hoursDiff)} ساعت پیش)`;
+                            } else {
+                                document.getElementById('status').innerHTML = 
+                                    `📌 <span class="count">${proxies.length}</span> پروکسی از حافظه (قدیمی - بارگذاری مجدد توصیه می‌شود)`;
+                            }
+                        } else {
+                            document.getElementById('status').innerHTML = 
+                                `📌 <span class="count">${proxies.length}</span> پروکسی از حافظه بارگذاری شد.`;
+                        }
+                        return;
+                    }
+                } catch (e) {}
+            }
+
+            // اگر داده‌ای نبود، از داده‌های نمونه استفاده کن
+            const fallback = getFallbackProxies();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(fallback));
+            localStorage.setItem(STORAGE_TIME_KEY, new Date().toISOString());
+            renderProxies(fallback);
+            document.getElementById('status').innerHTML = 
+                `📌 <span class="count">${fallback.length}</span> پروکسی نمونه بارگذاری شد.`;
+        };
+    </script>
+
+</body>
+</html>
